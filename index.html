@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>趣味游戏乐园</title>
+    <style>
+        /* 基本样式 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* 游戏展示区 */
+        .game-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* 游戏卡片样式 */
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .game-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .game-card h3 {
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .game-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .game-card button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .game-card button:hover {
+            background-color: #45a049;
+        }
+
+        /* 游戏预览窗口样式 */
+        .game-preview {
+            width: 100%;
+            height: 200px;
+            border-radius: 5px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .game-preview iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="header">
+        <h1>趣味游戏乐园</h1>
+        <p>欢迎来到我们的游戏世界！</p>
+        <a href="learn.html" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">开始学习游戏开发</a>
+    </div>
+
+    <!-- 游戏展示区 -->
+    <div class="game-container">
+        <!-- 俄罗斯方块游戏卡片 -->
+        <div class="game-card">
+            <div class="game-preview">
+                <iframe src="games/tetris/preview.html" allowfullscreen></iframe>
+            </div>
+            <h3>俄罗斯方块</h3>
+            <p>经典的俄罗斯方块游戏，考验你的空间思维能力！</p>
+            <button onclick="loadGame('tetris')">开始游戏</button>
+        </div>
+
+        <!-- 贪吃蛇游戏卡片 -->
+        <div class="game-card">
+            <div class="game-preview">
+                <iframe src="games/snake/preview.html" allowfullscreen></iframe>
+            </div>
+            <h3>贪吃蛇</h3>
+            <p>控制蛇吃食物，看看你能长多长！</p>
+            <button onclick="loadGame('snake')">开始游戏</button>
+        </div>
+
+        <!-- 拼图游戏卡片 -->
+        <div class="game-card">
+            <div class="game-preview">
+                <iframe src="games/puzzle/preview.html" allowfullscreen></iframe>
+            </div>
+            <h3>拼图游戏</h3>
+            <p>考验你的观察力和耐心！</p>
+            <button onclick="loadGame('puzzle')">开始游戏</button>
+        </div>
+
+        <!-- 新增游戏卡片 -->
+        <div class="game-card">
+            <div class="game-preview">
+                <iframe src="games/phaser-demo/preview.html" allowfullscreen></iframe>
+            </div>
+            <h3>Phaser 示例游戏</h3>
+            <p>使用 Phaser 引擎开发的现代游戏！</p>
+            <button onclick="loadGame('phaser-demo')">开始游戏</button>
+        </div>
+    </div>
+
+    <!-- 游戏加载脚本 -->
+    <script>
+        function loadGame(gameName) {
+            // 创建游戏窗口
+            const gameWindow = window.open('', '_blank', 'width=800,height=600');
+            gameWindow.document.write(`
+                <html>
+                <head>
+                    <title>${gameName}</title>
+                    <style>
+                        body { margin: 0; padding: 0; }
+                        iframe { width: 100%; height: 100vh; border: none; }
+                    </style>
+                </head>
+                <body>
+                    <iframe src="games/${gameName}/index.html"></iframe>
+                </body>
+                </html>
+            `);
+        }
+    </script>
+</body>
+</html>

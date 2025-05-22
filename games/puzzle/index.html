@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字方块游戏</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        #game-board {
+            width: 300px;
+            height: 300px;
+            background: white;
+            border: 2px solid #333;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            padding: 10px;
+        }
+
+        .game-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            background: #2196F3;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            user-select: none;
+            border-radius: 4px;
+        }
+
+        .tile:hover {
+            transform: scale(0.95);
+            background: #1976D2;
+        }
+
+        .tile.empty {
+            background: #f0f0f0;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .tile.completed {
+            background: #4CAF50;
+        }
+
+        .tile.completed:hover {
+            background: #45a049;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .stats {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 5px;
+        }
+
+        .stats p {
+            margin: 5px 0;
+        }
+
+        .completion-message {
+            display: none;
+            margin: 20px 0;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="game-board"></div>
+        <div class="game-info">
+            <h2>数字方块游戏</h2>
+            <div class="stats">
+                <p>用时: <span id="timer">00:00</span></p>
+                <p>步数: <span id="moves">0</span></p>
+            </div>
+            <div class="completion-message" id="completion-message"></div>
+            <div class="controls">
+                <button onclick="startGame()">开始游戏</button>
+                <button onclick="resetGame()">重新开始</button>
+            </div>
+            <div class="instructions">
+                <h3>游戏说明:</h3>
+                <p>点击方块与空白处交换位置</p>
+                <p>将所有数字按顺序排列即可获胜</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏配置
+        const BOARD_SIZE = 3;
+        const TOTAL_TILES = BOARD_SIZE * BOARD_SIZE;
+        let tiles = [];
+        let emptyTile = null;
+        let moves = 0;
+        let timer = null;
+        let seconds = 0;
+        let isPlaying = false;
+
+        // 创建游戏板
+        function createBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+            tiles = [];
+
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    const tile = document.createElement('div');
+                    const value = i * BOARD_SIZE + j + 1;
+                    
+                    tile.className = 'tile';
+                    tile.textContent = value === TOTAL_TILES ? '' : value;
+                    tile.dataset.value = value;
+                    tile.dataset.x = j;
+                    tile.dataset.y = i;
+                    
+                    if (value === TOTAL_TILES) {
+                        tile.classList.add('empty');
+                        emptyTile = tile;
+                    } else {
+                        tile.onclick = () => moveTile(tile);
+                    }
+                    
+                    board.appendChild(tile);
+                    tiles.push(tile);
+                }
+            }
+        }
+
+        // 移动方块
+        function moveTile(tile, isShuffling = false) {
+            if (!isPlaying) return;
+
+            const x = parseInt(tile.dataset.x);
+            const y = parseInt(tile.dataset.y);
+            const emptyX = parseInt(emptyTile.dataset.x);
+            const emptyY = parseInt(emptyTile.dataset.y);
+
+            // 检查是否可以移动
+            if (Math.abs(x - emptyX) + Math.abs(y - emptyY) !== 1) return;
+
+            // 交换位置
+            const tempX = tile.dataset.x;
+            const tempY = tile.dataset.y;
+            tile.dataset.x = emptyTile.dataset.x;
+            tile.dataset.y = emptyTile.dataset.y;
+            emptyTile.dataset.x = tempX;
+            emptyTile.dataset.y = tempY;
+
+            // 更新显示
+            tile.style.gridColumn = parseInt(tile.dataset.x) + 1;
+            tile.style.gridRow = parseInt(tile.dataset.y) + 1;
+            emptyTile.style.gridColumn = parseInt(emptyTile.dataset.x) + 1;
+            emptyTile.style.gridRow = parseInt(emptyTile.dataset.y) + 1;
+
+            // 只在玩家移动时更新步数
+            if (!isShuffling) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+            }
+
+            // 检查是否完成
+            if (checkWin()) {
+                endGame();
+            }
+        }
+
+        // 检查是否获胜
+        function checkWin() {
+            return tiles.every(tile => {
+                const value = parseInt(tile.dataset.value);
+                const x = parseInt(tile.dataset.x);
+                const y = parseInt(tile.dataset.y);
+                
+                if (value === TOTAL_TILES) return true;
+                
+                const expectedX = (value - 1) % BOARD_SIZE;
+                const expectedY = Math.floor((value - 1) / BOARD_SIZE);
+                
+                return x === expectedX && y === expectedY;
+            });
+        }
+
+        // 打乱拼图
+        function shuffleBoard() {
+            for (let i = 0; i < 1000; i++) {
+                const emptyX = parseInt(emptyTile.dataset.x);
+                const emptyY = parseInt(emptyTile.dataset.y);
+                const possibleMoves = [];
+
+                if (emptyX > 0) possibleMoves.push({x: emptyX - 1, y: emptyY});
+                if (emptyX < BOARD_SIZE - 1) possibleMoves.push({x: emptyX + 1, y: emptyY});
+                if (emptyY > 0) possibleMoves.push({x: emptyX, y: emptyY - 1});
+                if (emptyY < BOARD_SIZE - 1) possibleMoves.push({x: emptyX, y: emptyY + 1});
+
+                const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                const tile = tiles.find(t => 
+                    parseInt(t.dataset.x) === move.x && 
+                    parseInt(t.dataset.y) === move.y
+                );
+                
+                if (tile) moveTile(tile, true);
+            }
+        }
+
+        // 开始游戏
+        function startGame() {
+            clearInterval(timer);
+            moves = 0;
+            seconds = 0;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('completion-message').style.display = 'none';
+            
+            timer = setInterval(() => {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }, 1000);
+
+            isPlaying = true;
+            createBoard();
+            shuffleBoard();
+        }
+
+        // 重置游戏
+        function resetGame() {
+            clearInterval(timer);
+            startGame();
+        }
+
+        // 结束游戏
+        function endGame() {
+            clearInterval(timer);
+            isPlaying = false;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            const timeString = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            
+            // 显示完成状态
+            tiles.forEach(tile => {
+                if (tile.textContent !== '') {
+                    tile.classList.add('completed');
+                }
+            });
+
+            // 显示完成消息
+            const message = document.getElementById('completion-message');
+            message.style.display = 'block';
+            message.innerHTML = `恭喜你完成拼图！<br>用时: ${timeString}<br>步数: ${moves}`;
+
+            // 询问是否继续游戏
+            if (confirm('是否开始新游戏？')) {
+                startGame();
+            }
+        }
+
+        // 初始化游戏
+        createBoard();
+    </script>
+</body>
+</html> 
